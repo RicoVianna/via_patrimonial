@@ -1,12 +1,9 @@
 // ===== CONTEXTO GLOBAL - VIA PATRIMONIAL =====
-// Compartilha os dados e funcoes entre todas as telas do sistema
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { DadosSistema, Imovel, Receita, Despesa, DespesaTemplate } from './types'
 import { carregarDados, salvarDados } from './storage'
 import { verificarEGerarCiclo, atualizarStatusAtrasados } from './recorrencia'
 
-// ===== TIPO DO CONTEXTO =====
 interface ContextoTipo {
     dados: DadosSistema
     adicionarImovel: (imovel: Omit<Imovel, 'id' | 'criadoEm'>) => void
@@ -14,9 +11,12 @@ interface ContextoTipo {
     excluirImovel: (id: string) => void
     marcarReceitaRecebida: (id: string) => void
     adicionarReceita: (receita: Omit<Receita, 'id'>) => void
+    editarReceita: (id: string, receita: Omit<Receita, 'id'>) => void
     excluirReceita: (id: string) => void
     marcarDespesaPaga: (id: string) => void
     adicionarDespesa: (despesa: Omit<Despesa, 'id'>) => void
+    adicionarDespesaRecorrente: (despesa: Omit<Despesa, 'id'>, template: Omit<DespesaTemplate, 'id'>) => void
+    editarDespesa: (id: string, despesa: Omit<Despesa, 'id'>) => void
     excluirDespesa: (id: string) => void
     adicionarTemplate: (template: Omit<DespesaTemplate, 'id'>) => void
     editarTemplate: (id: string, template: Omit<DespesaTemplate, 'id'>) => void
@@ -24,15 +24,12 @@ interface ContextoTipo {
     atualizarDados: (dados: DadosSistema) => void
 }
 
-// ===== CRIACAO DO CONTEXTO =====
 const Contexto = createContext<ContextoTipo | null>(null)
 
-// ===== GERAR ID UNICO =====
 function gerarId(): string {
     return `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
 }
 
-// ===== PROVEDOR DO CONTEXTO =====
 export function ProvedorContexto({ children }: { children: ReactNode }) {
     const [dados, setDados] = useState<DadosSistema>(() => {
         const dadosCarregados = carregarDados()
@@ -80,11 +77,7 @@ export function ProvedorContexto({ children }: { children: ReactNode }) {
             ...dados,
             receitas: dados.receitas.map(item =>
                 item.id === id
-                    ? {
-                        ...item,
-                        status: 'Recebido' as const,
-                        dataRecebimento: new Date().toISOString()
-                    }
+                    ? { ...item, status: 'Recebido' as const, dataRecebimento: new Date().toISOString() }
                     : item
             )
         })
@@ -93,6 +86,15 @@ export function ProvedorContexto({ children }: { children: ReactNode }) {
     function adicionarReceita(receita: Omit<Receita, 'id'>) {
         const nova: Receita = { ...receita, id: gerarId() }
         atualizar({ ...dados, receitas: [...dados.receitas, nova] })
+    }
+
+    function editarReceita(id: string, receita: Omit<Receita, 'id'>) {
+        atualizar({
+            ...dados,
+            receitas: dados.receitas.map(item =>
+                item.id === id ? { ...item, ...receita } : item
+            )
+        })
     }
 
     function excluirReceita(id: string) {
@@ -108,11 +110,7 @@ export function ProvedorContexto({ children }: { children: ReactNode }) {
             ...dados,
             despesas: dados.despesas.map(item =>
                 item.id === id
-                    ? {
-                        ...item,
-                        status: 'Pago' as const,
-                        dataPagamento: new Date().toISOString()
-                    }
+                    ? { ...item, status: 'Pago' as const, dataPagamento: new Date().toISOString() }
                     : item
             )
         })
@@ -123,6 +121,25 @@ export function ProvedorContexto({ children }: { children: ReactNode }) {
         atualizar({ ...dados, despesas: [...dados.despesas, nova] })
     }
 
+    function adicionarDespesaRecorrente(despesa: Omit<Despesa, 'id'>, template: Omit<DespesaTemplate, 'id'>) {
+        const nova: Despesa = { ...despesa, id: gerarId() }
+        const novoTemplate: DespesaTemplate = { ...template, id: gerarId() }
+        atualizar({
+            ...dados,
+            despesas: [...dados.despesas, nova],
+            despesasTemplate: [...dados.despesasTemplate, novoTemplate]
+        })
+    }
+
+    function editarDespesa(id: string, despesa: Omit<Despesa, 'id'>) {
+        atualizar({
+            ...dados,
+            despesas: dados.despesas.map(item =>
+                item.id === id ? { ...item, ...despesa } : item
+            )
+        })
+    }
+
     function excluirDespesa(id: string) {
         atualizar({
             ...dados,
@@ -130,7 +147,7 @@ export function ProvedorContexto({ children }: { children: ReactNode }) {
         })
     }
 
-    // ===== TEMPLATES DE DESPESA =====
+    // ===== TEMPLATES =====
     function adicionarTemplate(template: Omit<DespesaTemplate, 'id'>) {
         const novo: DespesaTemplate = { ...template, id: gerarId() }
         atualizar({ ...dados, despesasTemplate: [...dados.despesasTemplate, novo] })
@@ -160,9 +177,12 @@ export function ProvedorContexto({ children }: { children: ReactNode }) {
             excluirImovel,
             marcarReceitaRecebida,
             adicionarReceita,
+            editarReceita,
             excluirReceita,
             marcarDespesaPaga,
             adicionarDespesa,
+            adicionarDespesaRecorrente,
+            editarDespesa,
             excluirDespesa,
             adicionarTemplate,
             editarTemplate,
@@ -174,7 +194,6 @@ export function ProvedorContexto({ children }: { children: ReactNode }) {
     )
 }
 
-// ===== HOOK PARA USAR O CONTEXTO =====
 export function useContexto() {
     const contexto = useContext(Contexto)
     if (!contexto) {

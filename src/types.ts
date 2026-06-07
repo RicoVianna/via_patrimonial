@@ -61,6 +61,8 @@ export interface Despesa {
     id: string
     nome: string
     categoria: CategoriaDespesa
+    imovelId?: string
+    nomeImovel?: string
     valor: number
     mes: number
     ano: number

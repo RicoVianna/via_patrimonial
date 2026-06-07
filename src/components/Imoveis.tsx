@@ -24,7 +24,6 @@ const imovelVazio = {
     dataFimContrato: '',
 }
 
-// ===== MASCARAS =====
 function mascararTelefone(valor: string): string {
     const numeros = valor.replace(/\D/g, '').slice(0, 11)
     if (numeros.length <= 10) {
@@ -144,7 +143,7 @@ export default function Imoveis() {
                 </button>
             </div>
 
-            {/* Lista de imoveis */}
+            {/* Lista */}
             {imoveis.length === 0 ? (
                 <div className="card" style={{ textAlign: 'center', padding: '48px' }}>
                     <Building2 size={48} color="var(--color-text-muted)" style={{ marginBottom: '16px' }} />
@@ -156,14 +155,14 @@ export default function Imoveis() {
                     {imoveis.map(imovel => (
                         <div key={imovel.id} className="card" style={{
                             display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: '16px'
+                            flexDirection: 'column',
+                            gap: '12px'
                         }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
+                            {/* Linha superior: icone + info + valor */}
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                                 <div style={{
-                                    width: '48px',
-                                    height: '48px',
+                                    width: '44px',
+                                    height: '44px',
                                     borderRadius: 'var(--radius-sm)',
                                     backgroundColor: 'var(--color-pending-bg)',
                                     display: 'flex',
@@ -174,7 +173,8 @@ export default function Imoveis() {
                                 }}>
                                     <Building2 size={22} />
                                 </div>
-                                <div style={{ flex: 1 }}>
+
+                                <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{
                                         fontWeight: 600,
                                         color: 'var(--color-text)',
@@ -185,14 +185,15 @@ export default function Imoveis() {
                                     </div>
                                     <div style={{
                                         fontSize: '0.85rem',
-                                        color: 'var(--color-text-secondary)'
+                                        color: 'var(--color-text-secondary)',
+                                        marginBottom: '2px'
                                     }}>
                                         {imovel.tipo} &bull; {imovel.endereco}
                                     </div>
                                     <div style={{
                                         fontSize: '0.85rem',
                                         color: 'var(--color-text-secondary)',
-                                        marginTop: '2px'
+                                        marginBottom: '2px'
                                     }}>
                                         Inquilino: {imovel.nomeInquilino || 'Nao informado'} &bull; Vence dia {imovel.diaVencimento}
                                     </div>
@@ -200,18 +201,19 @@ export default function Imoveis() {
                                         <div style={{
                                             fontSize: '0.8rem',
                                             color: 'var(--color-text-muted)',
-                                            marginTop: '2px'
                                         }}>
                                             Contrato: {new Date(imovel.dataInicioContrato + 'T12:00:00').toLocaleDateString('pt-BR')}
                                             {imovel.dataFimContrato && ` ate ${new Date(imovel.dataFimContrato + 'T12:00:00').toLocaleDateString('pt-BR')}`}
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Valor */}
                                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                                     <div style={{
                                         fontWeight: 700,
                                         color: 'var(--color-primary)',
-                                        fontSize: '1.1rem'
+                                        fontSize: '1rem'
                                     }}>
                                         {imovel.valorAluguel.toLocaleString('pt-BR', {
                                             style: 'currency',
@@ -219,7 +221,7 @@ export default function Imoveis() {
                                         })}
                                     </div>
                                     <div style={{
-                                        fontSize: '0.8rem',
+                                        fontSize: '0.75rem',
                                         color: 'var(--color-text-muted)'
                                     }}>
                                         por mes
@@ -227,8 +229,14 @@ export default function Imoveis() {
                                 </div>
                             </div>
 
-                            {/* Botoes */}
-                            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                            {/* Linha inferior: botoes */}
+                            <div style={{
+                                display: 'flex',
+                                gap: '8px',
+                                flexWrap: 'wrap',
+                                borderTop: '1px solid var(--color-border)',
+                                paddingTop: '12px'
+                            }}>
                                 {confirmarExclusao === imovel.id ? (
                                     <>
                                         <button
@@ -236,7 +244,7 @@ export default function Imoveis() {
                                             onClick={() => excluir(imovel.id)}
                                             style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 12px' }}
                                         >
-                                            <Check size={14} /> Confirmar
+                                            <Check size={14} /> Confirmar exclusao
                                         </button>
                                         <button
                                             className="btn-outline"
@@ -270,7 +278,7 @@ export default function Imoveis() {
                 </div>
             )}
 
-            {/* Formulario (modal) */}
+            {/* Formulario */}
             {mostrarFormulario && (
                 <div style={{
                     position: 'fixed',

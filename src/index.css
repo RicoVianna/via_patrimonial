@@ -61,11 +61,12 @@ html {
 }
 
 body {
-  font-family: var(--font-body);
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  line-height: 1.6;
-  min-height: 100vh;
+    font-family: var(--font-body);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    line-height: 1.6;
+    min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* ===== TIPOGRAFIA ===== */
@@ -256,3 +257,39 @@ label {
 .items-center { align-items: center; }
 .justify-between { justify-content: space-between; }
 .w-full { width: 100%; }
+
+
+
+/* ===== RESPONSIVIDADE MOBILE ===== */
+@media (max-width: 768px) {
+    /* Esconde a sidebar e mostra navegacao inferior */
+    aside {
+        display: none;
+    }
+
+    main {
+        padding: 16px !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+
+    /* Cartoes com menos padding */
+    .card {
+        padding: 16px;
+    }
+
+    /* Botoes em coluna no mobile */
+    .botoes-acao {
+        flex-direction: column;
+    }
+
+    /* Espaço para menu inferior */
+    body {
+        padding-bottom: 70px;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 { font-size: 1.4rem; }
+    h2 { font-size: 1.1rem; }
+}

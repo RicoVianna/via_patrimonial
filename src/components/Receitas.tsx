@@ -1,7 +1,8 @@
 // ===== TELA DE RECEITAS - VIA PATRIMONIAL =====
 import { useState } from 'react'
-import { CheckCircle, Clock, AlertCircle, TrendingUp, Plus, X } from 'lucide-react'
+import { CheckCircle, Clock, AlertCircle, TrendingUp, Plus, X, Pencil, Trash2, Check } from 'lucide-react'
 import { useContexto } from '../contexto'
+import { Receita } from '../types'
 
 function formatarMoeda(valor: number): string {
     return valor.toLocaleString('pt-BR', {
@@ -28,16 +29,20 @@ function desformatarValor(valor: string): number {
     return Number(valor.replace(/\./g, '').replace(',', '.')) || 0
 }
 
+const formVazio = {
+    descricao: '',
+    valor: '',
+    diaVencimento: 5,
+    observacoes: '',
+}
+
 export default function Receitas() {
-    const { dados, marcarReceitaRecebida, adicionarReceita } = useContexto()
+    const { dados, marcarReceitaRecebida, adicionarReceita, editarReceita, excluirReceita } = useContexto()
     const [aba, setAba] = useState<'pendentes' | 'recebidas' | 'atrasadas'>('pendentes')
     const [mostrarFormulario, setMostrarFormulario] = useState(false)
-    const [form, setForm] = useState({
-        descricao: '',
-        valor: '',
-        diaVencimento: 5,
-        observacoes: '',
-    })
+    const [editandoId, setEditandoId] = useState<string | null>(null)
+    const [confirmarExclusao, setConfirmarExclusao] = useState<string | null>(null)
+    const [form, setForm] = useState(formVazio)
 
     const agora = new Date()
     const mesAtual = agora.getMonth() + 1
@@ -58,25 +63,66 @@ export default function Receitas() {
     const totalRecebido = recebidas.reduce((acc, r) => acc + r.valor, 0)
     const totalAtrasado = atrasadas.reduce((acc, r) => acc + r.valor, 0)
 
+    function abrirFormularioEdicao(receita: Receita) {
+        setForm({
+            descricao: receita.nomeImovel,
+            valor: receita.valor.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }),
+            diaVencimento: new Date(receita.dataVencimento).getDate(),
+            observacoes: receita.observacoes,
+        })
+        setEditandoId(receita.id)
+        setMostrarFormulario(true)
+    }
+
+    function fecharFormulario() {
+        setMostrarFormulario(false)
+        setEditandoId(null)
+        setForm(formVazio)
+    }
+
     function salvar() {
         if (!form.descricao || !form.valor) return
 
         const dataVencimento = new Date(anoAtual, mesAtual - 1, form.diaVencimento)
 
-        adicionarReceita({
-            imovelId: 'eventual',
-            nomeImovel: form.descricao,
-            nomeInquilino: '',
-            valor: desformatarValor(form.valor),
-            mes: mesAtual,
-            ano: anoAtual,
-            dataVencimento: dataVencimento.toISOString(),
-            status: 'Pendente',
-            observacoes: form.observacoes,
-        })
+        if (editandoId) {
+            const original = dados.receitas.find(r => r.id === editandoId)
+            if (!original) return
+            editarReceita(editandoId, {
+                imovelId: original.imovelId,
+                nomeImovel: form.descricao,
+                nomeInquilino: original.nomeInquilino,
+                valor: desformatarValor(form.valor),
+                mes: original.mes,
+                ano: original.ano,
+                dataVencimento: dataVencimento.toISOString(),
+                status: original.status,
+                dataRecebimento: original.dataRecebimento,
+                observacoes: form.observacoes,
+            })
+        } else {
+            adicionarReceita({
+                imovelId: 'eventual',
+                nomeImovel: form.descricao,
+                nomeInquilino: '',
+                valor: desformatarValor(form.valor),
+                mes: mesAtual,
+                ano: anoAtual,
+                dataVencimento: dataVencimento.toISOString(),
+                status: 'Pendente',
+                observacoes: form.observacoes,
+            })
+        }
 
-        setMostrarFormulario(false)
-        setForm({ descricao: '', valor: '', diaVencimento: 5, observacoes: '' })
+        fecharFormulario()
+    }
+
+    function excluir(id: string) {
+        excluirReceita(id)
+        setConfirmarExclusao(null)
     }
 
     const estiloAba = (ativa: boolean) => ({
@@ -110,13 +156,9 @@ export default function Receitas() {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {lista.map(receita => (
-                    <div key={receita.id} className="card" style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: '16px'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
+                    <div key={receita.id} className="card">
+                        {/* Linha principal */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                             <div style={{
                                 width: '44px',
                                 height: '44px',
@@ -139,7 +181,7 @@ export default function Receitas() {
                                 {receita.status === 'Pendente' && <Clock size={20} />}
                             </div>
 
-                            <div style={{ flex: 1 }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ fontWeight: 600, color: 'var(--color-text)', marginBottom: '4px' }}>
                                     {receita.nomeImovel}
                                 </div>
@@ -173,23 +215,59 @@ export default function Receitas() {
                             </div>
                         </div>
 
-                        {receita.status !== 'Recebido' && (
-                            <button
-                                className="btn-primary"
-                                onClick={() => marcarReceitaRecebida(receita.id)}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    flexShrink: 0,
-                                    fontSize: '0.85rem',
-                                    padding: '8px 14px'
-                                }}
-                            >
-                                <CheckCircle size={14} />
-                                Recebido
-                            </button>
-                        )}
+                        {/* Botoes — linha separada para mobile */}
+                        <div style={{
+                            display: 'flex',
+                            gap: '8px',
+                            marginTop: '12px',
+                            flexWrap: 'wrap'
+                        }}>
+                            {confirmarExclusao === receita.id ? (
+                                <>
+                                    <button
+                                        className="btn-danger"
+                                        onClick={() => excluir(receita.id)}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 12px' }}
+                                    >
+                                        <Check size={14} /> Confirmar
+                                    </button>
+                                    <button
+                                        className="btn-outline"
+                                        onClick={() => setConfirmarExclusao(null)}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 12px' }}
+                                    >
+                                        <X size={14} /> Cancelar
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    {receita.status !== 'Recebido' && (
+                                        <button
+                                            className="btn-primary"
+                                            onClick={() => marcarReceitaRecebida(receita.id)}
+                                            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', padding: '8px 14px' }}
+                                        >
+                                            <CheckCircle size={14} />
+                                            Recebido
+                                        </button>
+                                    )}
+                                    <button
+                                        className="btn-outline"
+                                        onClick={() => abrirFormularioEdicao(receita)}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 12px' }}
+                                    >
+                                        <Pencil size={14} /> Editar
+                                    </button>
+                                    <button
+                                        className="btn-danger"
+                                        onClick={() => setConfirmarExclusao(receita.id)}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 12px' }}
+                                    >
+                                        <Trash2 size={14} /> Excluir
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
                 ))}
             </div>
@@ -198,7 +276,6 @@ export default function Receitas() {
 
     return (
         <div>
-            {/* Cabecalho */}
             <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -219,7 +296,6 @@ export default function Receitas() {
                 </button>
             </div>
 
-            {/* Resumo */}
             <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
@@ -246,7 +322,6 @@ export default function Receitas() {
                 </div>
             </div>
 
-            {/* Abas */}
             <div style={{
                 display: 'flex',
                 gap: '4px',
@@ -268,10 +343,8 @@ export default function Receitas() {
                 </button>
             </div>
 
-            {/* Lista */}
             {renderizarLista()}
 
-            {/* Formulario — Receita Eventual */}
             {mostrarFormulario && (
                 <div style={{
                     position: 'fixed',
@@ -295,8 +368,8 @@ export default function Receitas() {
                             justifyContent: 'space-between',
                             marginBottom: '24px'
                         }}>
-                            <h2>Nova Receita Eventual</h2>
-                            <button onClick={() => setMostrarFormulario(false)} style={{
+                            <h2>{editandoId ? 'Editar Receita' : 'Nova Receita Eventual'}</h2>
+                            <button onClick={fecharFormulario} style={{
                                 background: 'none',
                                 border: 'none',
                                 color: 'var(--color-text-muted)',
@@ -349,11 +422,11 @@ export default function Receitas() {
                             </div>
 
                             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px' }}>
-                                <button className="btn-outline" onClick={() => setMostrarFormulario(false)}>
+                                <button className="btn-outline" onClick={fecharFormulario}>
                                     Cancelar
                                 </button>
                                 <button className="btn-primary" onClick={salvar}>
-                                    Cadastrar Receita
+                                    {editandoId ? 'Salvar Alteracoes' : 'Cadastrar Receita'}
                                 </button>
                             </div>
                         </div>

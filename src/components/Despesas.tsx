@@ -41,10 +41,12 @@ const formVazio = {
     diaVencimento: 5,
     observacoes: '',
     recorrente: true,
+    vinculada: true,
+    imovelId: '',
 }
 
 export default function Despesas() {
-    const { dados, marcarDespesaPaga, adicionarTemplate, adicionarDespesa, excluirDespesa } = useContexto()
+    const { dados, marcarDespesaPaga, adicionarDespesa, adicionarDespesaRecorrente, editarDespesa, excluirDespesa } = useContexto()
     const [aba, setAba] = useState<'pendentes' | 'pagas' | 'atrasadas'>('pendentes')
     const [mostrarFormulario, setMostrarFormulario] = useState(false)
     const [editandoId, setEditandoId] = useState<string | null>(null)
@@ -55,6 +57,8 @@ export default function Despesas() {
     const mesAtual = agora.getMonth() + 1
     const anoAtual = agora.getFullYear()
     const nomeMes = agora.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })
+
+    const imoveisAtivos = dados.imoveis.filter(i => i.ativo)
 
     const despesasMes = dados.despesas.filter(
         d => d.mes === mesAtual && d.ano === anoAtual
@@ -81,6 +85,8 @@ export default function Despesas() {
             diaVencimento: new Date(despesa.dataVencimento).getDate(),
             observacoes: despesa.observacoes,
             recorrente: despesa.recorrente,
+            vinculada: !!despesa.imovelId,
+            imovelId: despesa.imovelId || '',
         })
         setEditandoId(despesa.id)
         setMostrarFormulario(true)
@@ -94,66 +100,54 @@ export default function Despesas() {
 
     function salvar() {
         if (!form.nome) return
+        if (form.vinculada && !form.imovelId) return
 
-        const dataVencimento = new Date(anoAtual, mesAtual - 1, form.diaVencimento)
         const valor = desformatarValor(form.valor)
+        const dataVencimento = new Date(anoAtual, mesAtual - 1, form.diaVencimento)
+
+        const imovel = form.vinculada
+            ? dados.imoveis.find(i => i.id === form.imovelId)
+            : null
+
+        const dadosDespesa = {
+            nome: form.nome,
+            categoria: form.categoria,
+            imovelId: imovel?.id,
+            nomeImovel: imovel?.nome,
+            valor,
+            mes: mesAtual,
+            ano: anoAtual,
+            dataVencimento: dataVencimento.toISOString(),
+            status: 'Pendente' as const,
+            observacoes: form.observacoes,
+            recorrente: form.recorrente,
+        }
 
         if (editandoId) {
-            // Edita a despesa existente
-            const despesasAtualizadas = dados.despesas.map(d =>
-                d.id === editandoId
-                    ? {
-                        ...d,
+            const original = dados.despesas.find(d => d.id === editandoId)
+            if (!original) return
+            editarDespesa(editandoId, {
+                ...dadosDespesa,
+                mes: original.mes,
+                ano: original.ano,
+                status: original.status,
+                dataPagamento: original.dataPagamento,
+            })
+        } else {
+            if (form.recorrente) {
+                adicionarDespesaRecorrente(
+                    dadosDespesa,
+                    {
                         nome: form.nome,
                         categoria: form.categoria,
                         valor,
-                        dataVencimento: dataVencimento.toISOString(),
+                        diaVencimento: form.diaVencimento,
                         observacoes: form.observacoes,
-                        recorrente: form.recorrente,
+                        ativo: true,
                     }
-                    : d
-            )
-            // Usa atualizarDados do contexto
-            adicionarDespesa({
-                nome: '',
-                categoria: form.categoria,
-                valor: 0,
-                mes: mesAtual,
-                ano: anoAtual,
-                dataVencimento: dataVencimento.toISOString(),
-                status: 'Pendente',
-                observacoes: '',
-                recorrente: false,
-            })
-            // Remove o que acabou de adicionar e aplica a edicao
-            excluirDespesa(dados.despesas[dados.despesas.length]?.id || '')
-            dados.despesas.forEach((_, i) => {
-                if (dados.despesas[i].id === editandoId) {
-                    dados.despesas[i] = despesasAtualizadas[i]
-                }
-            })
-        } else {
-            adicionarDespesa({
-                nome: form.nome,
-                categoria: form.categoria,
-                valor,
-                mes: mesAtual,
-                ano: anoAtual,
-                dataVencimento: dataVencimento.toISOString(),
-                status: 'Pendente',
-                observacoes: form.observacoes,
-                recorrente: form.recorrente,
-            })
-
-            if (form.recorrente) {
-                adicionarTemplate({
-                    nome: form.nome,
-                    categoria: form.categoria,
-                    valor,
-                    diaVencimento: form.diaVencimento,
-                    observacoes: form.observacoes,
-                    ativo: true,
-                })
+                )
+            } else {
+                adicionarDespesa(dadosDespesa)
             }
         }
 
@@ -176,6 +170,19 @@ export default function Despesas() {
         backgroundColor: ativa ? 'var(--color-primary)' : 'transparent',
         color: ativa ? 'white' : 'var(--color-text-secondary)',
         transition: 'all 0.2s ease',
+    })
+
+    const estiloBotaoTipo = (ativo: boolean) => ({
+        flex: 1,
+        padding: '12px',
+        borderRadius: 'var(--radius-sm)',
+        border: `2px solid ${ativo ? 'var(--color-primary)' : 'var(--color-border)'}`,
+        backgroundColor: ativo ? 'var(--color-pending-bg)' : 'transparent',
+        color: ativo ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+        cursor: 'pointer',
+        fontFamily: 'var(--font-body)',
+        fontWeight: ativo ? 600 : 400,
+        fontSize: '0.9rem',
     })
 
     function renderizarLista() {
@@ -230,6 +237,10 @@ export default function Despesas() {
                                     {despesa.nome}
                                 </div>
                                 <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                                    {despesa.nomeImovel
+                                        ? `${despesa.nomeImovel} \u2022 `
+                                        : 'Geral \u2022 '
+                                    }
                                     {despesa.categoria} &bull; Vence: {formatarData(despesa.dataVencimento)}
                                     {despesa.recorrente && ' \u2022 Recorrente'}
                                 </div>
@@ -259,7 +270,6 @@ export default function Despesas() {
                             </div>
                         </div>
 
-                        {/* Botoes de acao */}
                         <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                             {confirmarExclusao === despesa.id ? (
                                 <>
@@ -315,7 +325,6 @@ export default function Despesas() {
 
     return (
         <div>
-            {/* Cabecalho */}
             <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -336,7 +345,6 @@ export default function Despesas() {
                 </button>
             </div>
 
-            {/* Resumo */}
             <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
@@ -363,7 +371,6 @@ export default function Despesas() {
                 </div>
             </div>
 
-            {/* Abas */}
             <div style={{
                 display: 'flex',
                 gap: '4px',
@@ -385,10 +392,8 @@ export default function Despesas() {
                 </button>
             </div>
 
-            {/* Lista */}
             {renderizarLista()}
 
-            {/* Formulario */}
             {mostrarFormulario && (
                 <div style={{
                     position: 'fixed',
@@ -425,39 +430,51 @@ export default function Despesas() {
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-                            {/* Tipo de despesa */}
+                            {/* Vinculada ou Geral */}
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <button
+                                    onClick={() => setForm({ ...form, vinculada: true, imovelId: '' })}
+                                    style={estiloBotaoTipo(form.vinculada)}
+                                >
+                                    Vinculada a Imovel
+                                </button>
+                                <button
+                                    onClick={() => setForm({ ...form, vinculada: false, imovelId: '' })}
+                                    style={estiloBotaoTipo(!form.vinculada)}
+                                >
+                                    Despesa Geral
+                                </button>
+                            </div>
+
+                            {/* Selecao de imovel */}
+                            {form.vinculada && (
+                                <div>
+                                    <label>Imovel *</label>
+                                    <select
+                                        value={form.imovelId}
+                                        onChange={e => setForm({ ...form, imovelId: e.target.value })}
+                                    >
+                                        <option value="">Selecione um imovel...</option>
+                                        {imoveisAtivos.map(imovel => (
+                                            <option key={imovel.id} value={imovel.id}>
+                                                {imovel.nome}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
+                            {/* Recorrente ou Eventual */}
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <button
                                     onClick={() => setForm({ ...form, recorrente: true })}
-                                    style={{
-                                        flex: 1,
-                                        padding: '12px',
-                                        borderRadius: 'var(--radius-sm)',
-                                        border: `2px solid ${form.recorrente ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                                        backgroundColor: form.recorrente ? 'var(--color-pending-bg)' : 'transparent',
-                                        color: form.recorrente ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                                        cursor: 'pointer',
-                                        fontFamily: 'var(--font-body)',
-                                        fontWeight: form.recorrente ? 600 : 400,
-                                        fontSize: '0.9rem',
-                                    }}
+                                    style={estiloBotaoTipo(form.recorrente)}
                                 >
                                     Recorrente
                                 </button>
                                 <button
                                     onClick={() => setForm({ ...form, recorrente: false })}
-                                    style={{
-                                        flex: 1,
-                                        padding: '12px',
-                                        borderRadius: 'var(--radius-sm)',
-                                        border: `2px solid ${!form.recorrente ? 'var(--color-primary)' : 'var(--color-border)'}`,
-                                        backgroundColor: !form.recorrente ? 'var(--color-pending-bg)' : 'transparent',
-                                        color: !form.recorrente ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                                        cursor: 'pointer',
-                                        fontFamily: 'var(--font-body)',
-                                        fontWeight: !form.recorrente ? 600 : 400,
-                                        fontSize: '0.9rem',
-                                    }}
+                                    style={estiloBotaoTipo(!form.recorrente)}
                                 >
                                     Eventual
                                 </button>
