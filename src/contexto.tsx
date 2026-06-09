@@ -1,6 +1,6 @@
 // ===== CONTEXTO GLOBAL - VIA PATRIMONIAL =====
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { DadosSistema, Imovel, Receita, Despesa, DespesaTemplate } from './types'
+import { DadosSistema, Imovel, Receita, Despesa, DespesaTemplate, Participante } from './types'
 import { carregarDados, salvarDados } from './storage'
 import { verificarEGerarCiclo, atualizarStatusAtrasados } from './recorrencia'
 
@@ -10,10 +10,12 @@ interface ContextoTipo {
     editarImovel: (id: string, imovel: Omit<Imovel, 'id' | 'criadoEm'>) => void
     excluirImovel: (id: string) => void
     marcarReceitaRecebida: (id: string) => void
+    desfazerReceitaRecebida: (id: string) => void
     adicionarReceita: (receita: Omit<Receita, 'id'>) => void
     editarReceita: (id: string, receita: Omit<Receita, 'id'>) => void
     excluirReceita: (id: string) => void
     marcarDespesaPaga: (id: string) => void
+    desfazerDespesaPaga: (id: string) => void
     adicionarDespesa: (despesa: Omit<Despesa, 'id'>) => void
     adicionarDespesaRecorrente: (despesa: Omit<Despesa, 'id'>, template: Omit<DespesaTemplate, 'id'>) => void
     editarDespesa: (id: string, despesa: Omit<Despesa, 'id'>) => void
@@ -21,6 +23,9 @@ interface ContextoTipo {
     adicionarTemplate: (template: Omit<DespesaTemplate, 'id'>) => void
     editarTemplate: (id: string, template: Omit<DespesaTemplate, 'id'>) => void
     excluirTemplate: (id: string) => void
+    adicionarParticipante: (participante: Omit<Participante, 'id'>) => void
+    editarParticipante: (id: string, participante: Omit<Participante, 'id'>) => void
+    excluirParticipante: (id: string) => void
     atualizarDados: (dados: DadosSistema) => void
 }
 
@@ -83,6 +88,17 @@ export function ProvedorContexto({ children }: { children: ReactNode }) {
         })
     }
 
+    function desfazerReceitaRecebida(id: string) {
+        atualizar({
+            ...dados,
+            receitas: dados.receitas.map(item =>
+                item.id === id
+                    ? { ...item, status: 'Pendente' as const, dataRecebimento: undefined }
+                    : item
+            )
+        })
+    }
+
     function adicionarReceita(receita: Omit<Receita, 'id'>) {
         const nova: Receita = { ...receita, id: gerarId() }
         atualizar({ ...dados, receitas: [...dados.receitas, nova] })
@@ -111,6 +127,17 @@ export function ProvedorContexto({ children }: { children: ReactNode }) {
             despesas: dados.despesas.map(item =>
                 item.id === id
                     ? { ...item, status: 'Pago' as const, dataPagamento: new Date().toISOString() }
+                    : item
+            )
+        })
+    }
+
+    function desfazerDespesaPaga(id: string) {
+        atualizar({
+            ...dados,
+            despesas: dados.despesas.map(item =>
+                item.id === id
+                    ? { ...item, status: 'Pendente' as const, dataPagamento: undefined }
                     : item
             )
         })
@@ -169,6 +196,28 @@ export function ProvedorContexto({ children }: { children: ReactNode }) {
         })
     }
 
+    // ===== PARTICIPANTES =====
+    function adicionarParticipante(participante: Omit<Participante, 'id'>) {
+        const novo: Participante = { ...participante, id: gerarId() }
+        atualizar({ ...dados, participantes: [...(dados.participantes || []), novo] })
+    }
+
+    function editarParticipante(id: string, participante: Omit<Participante, 'id'>) {
+        atualizar({
+            ...dados,
+            participantes: (dados.participantes || []).map(item =>
+                item.id === id ? { ...item, ...participante } : item
+            )
+        })
+    }
+
+    function excluirParticipante(id: string) {
+        atualizar({
+            ...dados,
+            participantes: (dados.participantes || []).filter(item => item.id !== id)
+        })
+    }
+
     return (
         <Contexto.Provider value={{
             dados,
@@ -176,10 +225,12 @@ export function ProvedorContexto({ children }: { children: ReactNode }) {
             editarImovel,
             excluirImovel,
             marcarReceitaRecebida,
+            desfazerReceitaRecebida,
             adicionarReceita,
             editarReceita,
             excluirReceita,
             marcarDespesaPaga,
+            desfazerDespesaPaga,
             adicionarDespesa,
             adicionarDespesaRecorrente,
             editarDespesa,
@@ -187,6 +238,9 @@ export function ProvedorContexto({ children }: { children: ReactNode }) {
             adicionarTemplate,
             editarTemplate,
             excluirTemplate,
+            adicionarParticipante,
+            editarParticipante,
+            excluirParticipante,
             atualizarDados: atualizar
         }}>
             {children}

@@ -90,5 +90,16 @@ export interface DadosSistema {
     receitas: Receita[]
     despesas: Despesa[]
     despesasTemplate: DespesaTemplate[]
+    participantes: Participante[]
     ultimoCicloGerado: string
+}
+
+// ===== PARTICIPANTE DO RATEIO =====
+export interface Participante {
+    id: string
+    nome: string
+    percentual: number
+    whatsapp: string
+    email: string
+    ativo: boolean
 }

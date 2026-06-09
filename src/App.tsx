@@ -8,13 +8,17 @@ import Imoveis from './components/Imoveis'
 import Receitas from './components/Receitas'
 import Despesas from './components/Despesas'
 import Historico from './components/Historico'
+import Rateio from './components/Rateio'
+import Admin from './components/Admin'
 
 export type Tela =
     | 'dashboard'
     | 'imoveis'
     | 'receitas'
     | 'despesas'
+    | 'rateio'
     | 'historico'
+    | 'admin'
 
 function App() {
     const [telaAtiva, setTelaAtiva] = useState<Tela>('dashboard')
@@ -35,7 +39,9 @@ function App() {
             case 'imoveis': return <Imoveis />
             case 'receitas': return <Receitas />
             case 'despesas': return <Despesas />
+            case 'rateio': return <Rateio />
             case 'historico': return <Historico />
+            case 'admin': return <Admin />
             default: return <Dashboard />
         }
     }
@@ -46,12 +52,10 @@ function App() {
             minHeight: '100vh',
             backgroundColor: 'var(--color-bg)'
         }}>
-            {/* Menu lateral - apenas desktop */}
             {!isMobile && (
                 <Sidebar telaAtiva={telaAtiva} onNavegar={setTelaAtiva} />
             )}
 
-            {/* Conteudo principal */}
             <div style={{
                 flex: 1,
                 display: 'flex',
@@ -72,7 +76,6 @@ function App() {
                 </main>
             </div>
 
-            {/* Menu inferior - apenas mobile */}
             {isMobile && (
                 <NavMobile telaAtiva={telaAtiva} onNavegar={setTelaAtiva} />
             )}

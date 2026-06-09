@@ -1,5 +1,5 @@
 // ===== NAVEGACAO MOBILE - VIA PATRIMONIAL =====
-import { Home, Building2, TrendingUp, TrendingDown, History } from 'lucide-react'
+import { Home, Building2, TrendingUp, TrendingDown, History, PieChart, Settings } from 'lucide-react'
 import { Tela } from '../App'
 
 interface NavMobileProps {
@@ -12,7 +12,9 @@ const itensMenu = [
     { id: 'imoveis'   as Tela, label: 'Imoveis',   icone: Building2 },
     { id: 'receitas'  as Tela, label: 'Receitas',  icone: TrendingUp },
     { id: 'despesas'  as Tela, label: 'Despesas',  icone: TrendingDown },
+    { id: 'rateio'    as Tela, label: 'Rateio',    icone: PieChart },
     { id: 'historico' as Tela, label: 'Historico', icone: History },
+    { id: 'admin'     as Tela, label: 'Admin',     icone: Settings },
 ]
 
 export default function NavMobile({ telaAtiva, onNavegar }: NavMobileProps) {
@@ -28,7 +30,8 @@ export default function NavMobile({ telaAtiva, onNavegar }: NavMobileProps) {
             alignItems: 'center',
             padding: '8px 0 12px',
             zIndex: 100,
-            boxShadow: '0 -2px 12px rgba(30,58,95,0.15)'
+            boxShadow: '0 -2px 12px rgba(30,58,95,0.15)',
+            overflowX: 'auto',
         }}>
             {itensMenu.map(item => {
                 const Icone = item.icone
@@ -46,16 +49,18 @@ export default function NavMobile({ telaAtiva, onNavegar }: NavMobileProps) {
                             border: 'none',
                             cursor: 'pointer',
                             color: ativo ? 'white' : 'rgba(255,255,255,0.5)',
-                            padding: '4px 12px',
+                            padding: '4px 8px',
                             borderRadius: 'var(--radius-sm)',
                             transition: 'all 0.2s ease',
+                            flexShrink: 0,
                         }}
                     >
                         <Icone size={20} />
                         <span style={{
-                            fontSize: '0.7rem',
+                            fontSize: '0.65rem',
                             fontFamily: 'var(--font-body)',
                             fontWeight: ativo ? 600 : 400,
+                            whiteSpace: 'nowrap',
                         }}>
                             {item.label}
                         </span>

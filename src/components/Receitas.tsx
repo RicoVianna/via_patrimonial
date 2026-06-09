@@ -37,7 +37,7 @@ const formVazio = {
 }
 
 export default function Receitas() {
-    const { dados, marcarReceitaRecebida, adicionarReceita, editarReceita, excluirReceita } = useContexto()
+    const { dados, marcarReceitaRecebida, desfazerReceitaRecebida, adicionarReceita, editarReceita, excluirReceita } = useContexto()
     const [aba, setAba] = useState<'pendentes' | 'recebidas' | 'atrasadas'>('pendentes')
     const [mostrarFormulario, setMostrarFormulario] = useState(false)
     const [editandoId, setEditandoId] = useState<string | null>(null)
@@ -241,16 +241,25 @@ export default function Receitas() {
                                 </>
                             ) : (
                                 <>
-                                    {receita.status !== 'Recebido' && (
-                                        <button
-                                            className="btn-primary"
-                                            onClick={() => marcarReceitaRecebida(receita.id)}
-                                            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', padding: '8px 14px' }}
-                                        >
-                                            <CheckCircle size={14} />
-                                            Recebido
-                                        </button>
-                                    )}
+                                    {receita.status !== 'Recebido' ? (
+                                    <button
+                                        className="btn-primary"
+                                        onClick={() => marcarReceitaRecebida(receita.id)}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', padding: '8px 14px' }}
+                                    >
+                                        <CheckCircle size={14} />
+                                        Recebido
+                                    </button>
+                                ) : (
+                                    <button
+                                        className="btn-outline"
+                                        onClick={() => desfazerReceitaRecebida(receita.id)}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', padding: '8px 14px' }}
+                                    >
+                                        <X size={14} />
+                                        Desfazer
+                                    </button>
+                                )}
                                     <button
                                         className="btn-outline"
                                         onClick={() => abrirFormularioEdicao(receita)}

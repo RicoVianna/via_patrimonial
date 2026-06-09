@@ -12,6 +12,7 @@ const dadosIniciais: DadosSistema = {
     receitas: [],
     despesas: [],
     despesasTemplate: [],
+    participantes: [],
     ultimoCicloGerado: ''
 }
 

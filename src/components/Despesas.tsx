@@ -46,7 +46,7 @@ const formVazio = {
 }
 
 export default function Despesas() {
-    const { dados, marcarDespesaPaga, adicionarDespesa, adicionarDespesaRecorrente, editarDespesa, excluirDespesa } = useContexto()
+    const { dados, marcarDespesaPaga, desfazerDespesaPaga, adicionarDespesa, adicionarDespesaRecorrente, editarDespesa, excluirDespesa } = useContexto()
     const [aba, setAba] = useState<'pendentes' | 'pagas' | 'atrasadas'>('pendentes')
     const [mostrarFormulario, setMostrarFormulario] = useState(false)
     const [editandoId, setEditandoId] = useState<string | null>(null)
@@ -205,11 +205,10 @@ export default function Despesas() {
                 {lista.map(despesa => (
                     <div key={despesa.id} className="card" style={{
                         display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: '16px'
+                        flexDirection: 'column',
+                        gap: '12px'
                     }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                             <div style={{
                                 width: '44px',
                                 height: '44px',
@@ -270,7 +269,7 @@ export default function Despesas() {
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px', borderTop: '1px solid var(--color-border)', paddingTop: '12px' }}>
                             {confirmarExclusao === despesa.id ? (
                                 <>
                                     <button
@@ -290,7 +289,7 @@ export default function Despesas() {
                                 </>
                             ) : (
                                 <>
-                                    {despesa.status !== 'Pago' && (
+                                    {despesa.status !== 'Pago' ? (
                                         <button
                                             className="btn-primary"
                                             onClick={() => marcarDespesaPaga(despesa.id)}
@@ -298,6 +297,15 @@ export default function Despesas() {
                                         >
                                             <CheckCircle size={14} />
                                             Pago
+                                        </button>
+                                    ) : (
+                                        <button
+                                            className="btn-outline"
+                                            onClick={() => desfazerDespesaPaga(despesa.id)}
+                                            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', padding: '8px 14px' }}
+                                        >
+                                            <X size={14} />
+                                            Desfazer
                                         </button>
                                     )}
                                     <button
