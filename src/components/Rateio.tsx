@@ -1,5 +1,6 @@
 // ===== TELA DE RATEIO - VIA PATRIMONIAL =====
 import { useContexto } from '../contexto'
+import { exportarPDFParticipante } from '../exportar'
 
 function formatarMoeda(valor: number): string {
     return valor.toLocaleString('pt-BR', {
@@ -210,34 +211,39 @@ export default function Rateio() {
                                 </div>
 
                                 {/* Botoes de compartilhar */}
-                                {(participante.whatsapp || participante.email) && (
-                                    <div style={{
-                                        display: 'flex',
-                                        gap: '8px',
-                                        flexWrap: 'wrap',
-                                        borderTop: '1px solid var(--color-border)',
-                                        paddingTop: '12px'
-                                    }}>
-                                        {participante.whatsapp && (
-                                            <button
-                                                className="btn-primary"
-                                                onClick={() => compartilharWhatsApp(participante, valorBruto, valorDespesas, valorLiquido)}
-                                                style={{ fontSize: '0.85rem', padding: '8px 14px' }}
-                                            >
-                                                WhatsApp
-                                            </button>
-                                        )}
-                                        {participante.email && (
-                                            <button
-                                                className="btn-outline"
-                                                onClick={() => compartilharEmail(participante, valorBruto, valorDespesas, valorLiquido)}
-                                                style={{ fontSize: '0.85rem', padding: '8px 14px' }}
-                                            >
-                                                Email
-                                            </button>
-                                        )}
-                                    </div>
-                                )}
+                                <div style={{
+                                    display: 'flex',
+                                    gap: '8px',
+                                    flexWrap: 'wrap',
+                                    borderTop: '1px solid var(--color-border)',
+                                    paddingTop: '12px'
+                                }}>
+                                    <button
+                                        className="btn-outline"
+                                        onClick={() => exportarPDFParticipante(dados, participante.id, mesAtual, anoAtual)}
+                                        style={{ fontSize: '0.85rem', padding: '8px 14px' }}
+                                    >
+                                        Gerar PDF
+                                    </button>
+                                    {participante.whatsapp && (
+                                        <button
+                                            className="btn-primary"
+                                            onClick={() => compartilharWhatsApp(participante, valorBruto, valorDespesas, valorLiquido)}
+                                            style={{ fontSize: '0.85rem', padding: '8px 14px' }}
+                                        >
+                                            WhatsApp
+                                        </button>
+                                    )}
+                                    {participante.email && (
+                                        <button
+                                            className="btn-outline"
+                                            onClick={() => compartilharEmail(participante, valorBruto, valorDespesas, valorLiquido)}
+                                            style={{ fontSize: '0.85rem', padding: '8px 14px' }}
+                                        >
+                                            Email
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         )
                     })}

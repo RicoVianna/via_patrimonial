@@ -1,8 +1,10 @@
 // ===== AREA ADMINISTRATIVA - VIA PATRIMONIAL =====
-import { useState } from 'react'
-import { Plus, Pencil, Trash2, X, Check, Lock } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Plus, Pencil, Trash2, X, Check, Lock, Download, Upload } from 'lucide-react'
 import { useContexto } from '../contexto'
 import { Participante } from '../types'
+import { exportarBackup, importarBackup } from '../storage'
+import { exportarExcel, exportarPDFMensal } from '../exportar'
 
 const SENHA_ADMIN = 'admin'
 
@@ -27,7 +29,7 @@ function mascararTelefone(valor: string): string {
 }
 
 export default function Admin() {
-    const { dados, adicionarParticipante, editarParticipante, excluirParticipante } = useContexto()
+    const { dados, adicionarParticipante, editarParticipante, excluirParticipante, atualizarDados } = useContexto()
     const [autenticado, setAutenticado] = useState(false)
     const [senhaDigitada, setSenhaDigitada] = useState('')
     const [erroSenha, setErroSenha] = useState(false)
@@ -35,6 +37,8 @@ export default function Admin() {
     const [editandoId, setEditandoId] = useState<string | null>(null)
     const [confirmarExclusao, setConfirmarExclusao] = useState<string | null>(null)
     const [form, setForm] = useState(participanteVazio)
+    const [mensagemBackup, setMensagemBackup] = useState('')
+    const inputArquivoRef = useRef<HTMLInputElement>(null)
 
     const participantes = dados.participantes || []
     const somaPercentuais = participantes
@@ -87,6 +91,27 @@ export default function Admin() {
     function excluir(id: string) {
         excluirParticipante(id)
         setConfirmarExclusao(null)
+    }
+
+    function handleExportarBackup() {
+        exportarBackup(dados)
+        setMensagemBackup('Backup exportado com sucesso!')
+        setTimeout(() => setMensagemBackup(''), 3000)
+    }
+
+    async function handleImportarBackup(e: React.ChangeEvent<HTMLInputElement>) {
+        const arquivo = e.target.files?.[0]
+        if (!arquivo) return
+        try {
+            const dadosImportados = await importarBackup(arquivo)
+            atualizarDados(dadosImportados)
+            setMensagemBackup('Backup importado com sucesso!')
+            setTimeout(() => setMensagemBackup(''), 3000)
+        } catch {
+            setMensagemBackup('Erro ao importar backup. Verifique o arquivo.')
+            setTimeout(() => setMensagemBackup(''), 3000)
+        }
+        if (inputArquivoRef.current) inputArquivoRef.current.value = ''
     }
 
     // ===== TELA DE LOGIN =====
@@ -149,23 +174,97 @@ export default function Admin() {
     return (
         <div>
             {/* Cabecalho */}
+            <div style={{ marginBottom: '32px' }}>
+                <h1 style={{ marginBottom: '6px' }}>Area Administrativa</h1>
+                <p>Gerencie participantes e dados do sistema</p>
+            </div>
+
+            {/* Secao de Backup */}
+            <div className="card" style={{ marginBottom: '32px' }}>
+                <h2 style={{ marginBottom: '16px', fontSize: '1.1rem' }}>Relatorios</h2>
+
+                {mensagemBackup && (
+                    <div style={{
+                        backgroundColor: mensagemBackup.includes('Erro')
+                            ? 'var(--color-danger-bg)'
+                            : 'var(--color-success-bg)',
+                        color: mensagemBackup.includes('Erro')
+                            ? 'var(--color-danger)'
+                            : 'var(--color-success)',
+                        padding: '10px 14px',
+                        borderRadius: 'var(--radius-sm)',
+                        marginBottom: '16px',
+                        fontSize: '0.9rem'
+                    }}>
+                        {mensagemBackup}
+                    </div>
+                )}
+
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <button
+                    className="btn-primary"
+                    onClick={() => exportarPDFMensal(dados, new Date().getMonth() + 1, new Date().getFullYear())}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                    <Download size={16} />
+                    Exportar PDF
+                </button>
+
+                <button
+                    className="btn-outline"
+                    onClick={() => exportarExcel(dados, new Date().getMonth() + 1, new Date().getFullYear())}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                    <Download size={16} />
+                    Exportar Excel
+                </button>
+            </div>
+
+            <h2 style={{ marginBottom: '16px', marginTop: '24px', fontSize: '1.1rem' }}>Backup e Restauracao</h2>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <button
+                    className="btn-primary"
+                    onClick={handleExportarBackup}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                    <Download size={16} />
+                    Exportar Backup
+                </button>
+
+                <button
+                    className="btn-outline"
+                    onClick={() => inputArquivoRef.current?.click()}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                    <Upload size={16} />
+                    Importar Backup
+                </button>
+
+                <input
+                    ref={inputArquivoRef}
+                    type="file"
+                    accept=".json"
+                    onChange={handleImportarBackup}
+                    style={{ display: 'none' }}
+                />
+            </div>
+            </div>
+
+            {/* Secao de Participantes */}
             <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                marginBottom: '32px'
+                marginBottom: '16px'
             }}>
-                <div>
-                    <h1 style={{ marginBottom: '6px' }}>Participantes do Rateio</h1>
-                    <p>Gerencie os participantes e seus percentuais</p>
-                </div>
+                <h2 style={{ fontSize: '1.1rem' }}>Participantes do Rateio</h2>
                 <button className="btn-primary" onClick={abrirFormularioNovo} style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px'
                 }}>
                     <Plus size={16} />
-                    Novo Participante
+                    Novo
                 </button>
             </div>
 
@@ -180,7 +279,7 @@ export default function Admin() {
                         : 'var(--color-warning)'}`,
                     borderRadius: 'var(--radius-sm)',
                     padding: '12px 16px',
-                    marginBottom: '20px',
+                    marginBottom: '16px',
                     color: somaPercentuais === 100
                         ? 'var(--color-success)'
                         : 'var(--color-warning)',
@@ -198,7 +297,7 @@ export default function Admin() {
             {participantes.length === 0 ? (
                 <div className="card" style={{ textAlign: 'center', padding: '48px' }}>
                     <h3 style={{ marginBottom: '8px' }}>Nenhum participante cadastrado</h3>
-                    <p>Clique em "Novo Participante" para comecar.</p>
+                    <p>Clique em "Novo" para comecar.</p>
                 </div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -262,7 +361,6 @@ export default function Admin() {
                                 </div>
                             </div>
 
-                            {/* Botoes */}
                             <div style={{
                                 display: 'flex',
                                 gap: '8px',
