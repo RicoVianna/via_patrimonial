@@ -92,7 +92,20 @@ function App() {
                     boxSizing: 'border-box',
                     paddingBottom: isMobile ? '90px' : '32px',
                 }}>
-                    {renderizarTela()}
+
+                {renderizarTela()}
+
+                {/* Rodape */}
+                <footer style={{
+                    textAlign: 'center',
+                    padding: '16px',
+                    color: 'var(--color-text-muted)',
+                    fontSize: '0.75rem',
+                    borderTop: '1px solid var(--color-border)',
+                    marginTop: '100px',
+                }}>
+                    Via Patrimonial &copy; {new Date().getFullYear()} — Todos os direitos reservados
+                </footer>
                 </main>
             </div>
 
