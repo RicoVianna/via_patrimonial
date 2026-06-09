@@ -90,7 +90,7 @@ export function exportarExcel(dados: DadosSistema, mes: number, ano: number) {
             'Valor Liquido': formatarMoeda(liquido * p.percentual / 100),
         }))
     const wsRateio = XLSX.utils.json_to_sheet(rateioData)
-    XLSX.utils.book_append_sheet(wb, wsRateio, 'Rateio')
+    XLSX.utils.book_append_sheet(wb, wsRateio, 'Partilha')
 
     // baixar arquivo
     const periodo = `${String(mes).padStart(2, '0')}_${ano}`
@@ -210,7 +210,7 @@ export function exportarPDFMensal(dados: DadosSistema, mes: number, ano: number)
 
         doc.setFontSize(13)
         doc.setTextColor(30, 58, 95)
-        doc.text('Rateio', 14, y)
+        doc.text('Partilha', 14, y)
         y += 8
 
         autoTable(doc, {
@@ -275,7 +275,7 @@ export function exportarPDFParticipante(
     doc.text('Via Patrimonial', 14, 20)
     doc.setFontSize(12)
     doc.setTextColor(90, 106, 126)
-    doc.text(`Rateio de ${periodo} - ${participante.nome}`, 14, 28)
+    doc.text(`Partilha de ${periodo} - ${participante.nome}`, 14, 28)
 
     doc.setDrawColor(228, 232, 239)
     doc.line(14, 32, 196, 32)

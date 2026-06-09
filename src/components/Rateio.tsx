@@ -36,7 +36,7 @@ export default function Rateio() {
 
     function compartilharWhatsApp(participante: typeof participantes[0], valorBruto: number, valorDespesas: number, valorLiquido: number) {
         const mensagem = encodeURIComponent(
-            `Ola ${participante.nome}! Segue o seu rateio de ${nomeMes}:\n\n` +
+            `Ola ${participante.nome}! Segue a partilha de ${nomeMes}:\n\n` +
             `Receitas recebidas: ${formatarMoeda(totalRecebido)}\n` +
             `Sua parte bruta (${participante.percentual}%): ${formatarMoeda(valorBruto)}\n\n` +
             `Despesas pagas: ${formatarMoeda(totalDespesas)}\n` +
@@ -49,10 +49,10 @@ export default function Rateio() {
     }
 
     function compartilharEmail(participante: typeof participantes[0], valorBruto: number, valorDespesas: number, valorLiquido: number) {
-        const assunto = encodeURIComponent(`Rateio - ${nomeMes}`)
+        const assunto = encodeURIComponent(`Partilha - ${nomeMes}`)
         const corpo = encodeURIComponent(
             `Ola ${participante.nome},\n\n` +
-            `Segue o seu rateio referente a ${nomeMes}:\n\n` +
+            `Segue a partilha referente a ${nomeMes}:\n\n` +
             `Receitas recebidas: ${formatarMoeda(totalRecebido)}\n` +
             `Sua parte bruta (${participante.percentual}%): ${formatarMoeda(valorBruto)}\n\n` +
             `Despesas pagas: ${formatarMoeda(totalDespesas)}\n` +
@@ -67,7 +67,7 @@ export default function Rateio() {
         <div>
             {/* Cabecalho */}
             <div style={{ marginBottom: '32px' }}>
-                <h1 style={{ marginBottom: '6px' }}>Rateio</h1>
+                <h1 style={{ marginBottom: '6px' }}>Partilha</h1>
                 <p style={{ textTransform: 'capitalize' }}>{nomeMes}</p>
             </div>
 
@@ -91,7 +91,7 @@ export default function Rateio() {
                     </div>
                 </div>
                 <div className="card" style={{ textAlign: 'center' }}>
-                    <p style={{ fontSize: '0.8rem', marginBottom: '4px' }}>Liquido para Rateio</p>
+                    <p style={{ fontSize: '0.8rem', marginBottom: '4px' }}>Liquido para Partilha</p>
                     <div style={{
                         fontWeight: 700,
                         fontSize: '1.1rem',
@@ -122,7 +122,7 @@ export default function Rateio() {
             {participantes.filter(p => p.ativo).length === 0 ? (
                 <div className="card" style={{ textAlign: 'center', padding: '48px' }}>
                     <h3 style={{ marginBottom: '8px' }}>Nenhum participante cadastrado</h3>
-                    <p>Acesse a area administrativa para cadastrar os participantes do rateio.</p>
+                    <p>Acesse a area administrativa para cadastrar os participantes da partilha.</p>
                 </div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

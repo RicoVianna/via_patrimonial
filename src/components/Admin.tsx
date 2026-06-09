@@ -257,7 +257,7 @@ export default function Admin() {
                 justifyContent: 'space-between',
                 marginBottom: '16px'
             }}>
-                <h2 style={{ fontSize: '1.1rem' }}>Participantes do Rateio</h2>
+                <h2 style={{ fontSize: '1.1rem' }}>Participantes da partilha</h2>
                 <button className="btn-primary" onClick={abrirFormularioNovo} style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -350,7 +350,7 @@ export default function Admin() {
                                         )}
                                     </div>
                                     <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-                                        {participante.percentual}% do rateio
+                                        {participante.percentual}% da partilha
                                         {participante.whatsapp && ` \u2022 ${participante.whatsapp}`}
                                     </div>
                                     {participante.email && (
@@ -461,9 +461,10 @@ export default function Admin() {
                                     type="number"
                                     min={0}
                                     max={100}
-                                    value={form.percentual}
+                                    step={0.01}
+                                    value={form.percentual || ''}
                                     onChange={e => setForm({ ...form, percentual: Number(e.target.value) })}
-                                    placeholder="Ex: 25"
+                                    placeholder="Ex: 16.67"
                                 />
                             </div>
 

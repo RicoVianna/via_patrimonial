@@ -1,6 +1,9 @@
 // ===== APP - VIA PATRIMONIAL =====
 import { useState, useEffect } from 'react'
 import { useContexto } from './contexto'
+import HeroSection from './components/HeroSection'
+import Login from './components/Login'
+import SplashScreen from './components/SplashScreen'
 import Sidebar from './components/Sidebar'
 import NavMobile from './components/NavMobile'
 import Dashboard from './components/Dashboard'
@@ -20,7 +23,10 @@ export type Tela =
     | 'historico'
     | 'admin'
 
+type Etapa = 'hero' | 'login' | 'splash' | 'sistema'
+
 function App() {
+    const [etapa, setEtapa] = useState<Etapa>('hero')
     const [telaAtiva, setTelaAtiva] = useState<Tela>('dashboard')
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
     const { dados } = useContexto()
@@ -33,6 +39,20 @@ function App() {
         return () => window.removeEventListener('resize', handleResize)
     }, [])
 
+    // ===== FLUXO DE ENTRADA =====
+    if (etapa === 'hero') {
+        return <HeroSection onEntrar={() => setEtapa('login')} />
+    }
+
+    if (etapa === 'login') {
+        return <Login onLogin={() => setEtapa('splash')} />
+    }
+
+    if (etapa === 'splash') {
+        return <SplashScreen onConcluido={() => setEtapa('sistema')} />
+    }
+
+    // ===== SISTEMA PRINCIPAL =====
     function renderizarTela() {
         switch (telaAtiva) {
             case 'dashboard': return <Dashboard />
