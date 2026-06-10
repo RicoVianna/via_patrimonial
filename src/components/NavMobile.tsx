@@ -12,7 +12,7 @@ const itensMenu = [
     { id: 'imoveis'   as Tela, label: 'Imoveis',   icone: Building2 },
     { id: 'receitas'  as Tela, label: 'Receitas',  icone: TrendingUp },
     { id: 'despesas'  as Tela, label: 'Despesas',  icone: TrendingDown },
-    { id: 'rateio'    as Tela, label: 'Partilha',    icone: PieChart },
+    { id: 'rateio'    as Tela, label: 'Rateio',    icone: PieChart },
     { id: 'historico' as Tela, label: 'Historico', icone: History },
     { id: 'admin'     as Tela, label: 'Admin',     icone: Settings },
 ]

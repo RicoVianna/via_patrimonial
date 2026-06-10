@@ -1,5 +1,6 @@
 // ===== DASHBOARD - VIA PATRIMONIAL =====
 import { Building2, TrendingUp, TrendingDown, Clock, AlertCircle, CheckCircle, Wallet } from 'lucide-react'
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { useContexto } from '../contexto'
 
 function formatarMoeda(valor: number): string {
@@ -63,20 +64,27 @@ export default function Dashboard() {
         d => d.mes === mesAtual && d.ano === anoAtual
     )
 
-    const receitaPrevista = receitasMes.reduce((acc, r) => acc + r.valor, 0)
+    // ===== RECEITAS =====
+    const receitaPrevista = receitasMes
+        .reduce((acc, r) => acc + r.valor, 0)
     const receitaRecebida = receitasMes
         .filter(r => r.status === 'Recebido')
         .reduce((acc, r) => acc + r.valor, 0)
     const receitaPendente = receitasMes
-        .filter(r => r.status === 'Pendente' || r.status === 'Atrasado')
+        .filter(r => r.status === 'Pendente')
         .reduce((acc, r) => acc + r.valor, 0)
     const receitaAtrasada = receitasMes
         .filter(r => r.status === 'Atrasado')
         .reduce((acc, r) => acc + r.valor, 0)
 
-    const despesaTotal = despesasMes.reduce((acc, d) => acc + d.valor, 0)
+    // ===== DESPESAS =====
+    const despesaPrevista = despesasMes
+        .reduce((acc, d) => acc + d.valor, 0)
     const despesaPaga = despesasMes
         .filter(d => d.status === 'Pago')
+        .reduce((acc, d) => acc + d.valor, 0)
+    const despesaPendente = despesasMes
+        .filter(d => d.status === 'Pendente')
         .reduce((acc, d) => acc + d.valor, 0)
     const despesaAtrasada = despesasMes
         .filter(d => d.status === 'Atrasado')
@@ -84,6 +92,22 @@ export default function Dashboard() {
 
     const saldoMensal = receitaRecebida - despesaPaga
     const nomeMes = agora.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })
+
+    // Grafico geral
+    const dadosGraficoGeral = [
+        { name: 'Recebido', value: receitaRecebida, cor: '#2e7d52' },
+        { name: 'Previsto', value: receitaPendente + receitaAtrasada, cor: '#b45309' },
+        { name: 'Despesas Pagas', value: despesaPaga, cor: '#c0392b' },
+    ].filter(d => d.value > 0)
+
+    // Grafico partilha
+    const participantes = (dados.participantes || []).filter(p => p.ativo)
+    const liquido = receitaRecebida - despesaPaga
+    const dadosPartilha = participantes.map((p, i) => ({
+        name: p.nome,
+        value: Math.round(liquido * p.percentual / 100 * 100) / 100,
+        cor: ['#1e3a5f', '#2e7d52', '#b8952a', '#c0392b', '#6c3483', '#1a5276'][i % 6]
+    })).filter(d => d.value > 0)
 
     const estiloSecao = {
         marginBottom: '12px',
@@ -103,6 +127,9 @@ export default function Dashboard() {
         marginBottom: '8px'
     }
 
+    const temDados = dadosGraficoGeral.length > 0
+    const temPartilha = dadosPartilha.length > 0
+
     return (
         <div>
             <div style={{ marginBottom: '32px' }}>
@@ -120,6 +147,49 @@ export default function Dashboard() {
                 />
             </div>
 
+            {/* Grafico geral */}
+            {temDados && (
+                <>
+                    <h2 style={estiloSecao}>Visao Geral do Mes</h2>
+                    <div className="card" style={{ marginBottom: '8px' }}>
+                        <ResponsiveContainer width="100%" height={280}>
+                            <PieChart>
+                                <Pie
+                                    data={dadosGraficoGeral}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={70}
+                                    outerRadius={110}
+                                    paddingAngle={3}
+                                    dataKey="value"
+                                >
+                                    {dadosGraficoGeral.map((entry, index) => (
+                                        <Cell key={index} fill={entry.cor} />
+                                    ))}
+                                </Pie>
+                                <Tooltip
+                                    formatter={(value: number) => formatarMoeda(value)}
+                                    contentStyle={{
+                                        backgroundColor: 'var(--color-surface)',
+                                        border: '1px solid var(--color-border)',
+                                        borderRadius: '8px',
+                                        fontFamily: 'var(--font-body)',
+                                    }}
+                                />
+                                <Legend
+                                    formatter={(value) => (
+                                        <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.85rem', color: 'var(--color-text)' }}>
+                                            {value}
+                                        </span>
+                                    )}
+                                />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </>
+            )}
+
+            {/* Receitas */}
             <h2 style={estiloSecao}>Receitas</h2>
             <div style={estiloGrid}>
                 <CartaoMetrica
@@ -138,7 +208,7 @@ export default function Dashboard() {
                     corValor="var(--color-success)"
                 />
                 <CartaoMetrica
-                    titulo="Receita Pendente"
+                    titulo="A Receber"
                     valor={formatarMoeda(receitaPendente)}
                     icone={<Clock size={22} />}
                     corFundo="var(--color-warning-bg)"
@@ -155,17 +225,18 @@ export default function Dashboard() {
                 />
             </div>
 
+            {/* Despesas */}
             <h2 style={estiloSecao}>Despesas</h2>
             <div style={estiloGrid}>
                 <CartaoMetrica
-                    titulo="Despesas do Mes"
-                    valor={formatarMoeda(despesaTotal)}
+                    titulo="Despesa Prevista"
+                    valor={formatarMoeda(despesaPrevista)}
                     icone={<TrendingDown size={22} />}
                     corFundo="var(--color-pending-bg)"
                     corIcone="var(--color-primary)"
                 />
                 <CartaoMetrica
-                    titulo="Despesas Pagas"
+                    titulo="Despesa Paga"
                     valor={formatarMoeda(despesaPaga)}
                     icone={<CheckCircle size={22} />}
                     corFundo="var(--color-success-bg)"
@@ -173,7 +244,15 @@ export default function Dashboard() {
                     corValor="var(--color-success)"
                 />
                 <CartaoMetrica
-                    titulo="Despesas Atrasadas"
+                    titulo="A Pagar"
+                    valor={formatarMoeda(despesaPendente)}
+                    icone={<Clock size={22} />}
+                    corFundo="var(--color-warning-bg)"
+                    corIcone="var(--color-warning)"
+                    corValor="var(--color-warning)"
+                />
+                <CartaoMetrica
+                    titulo="Despesa Atrasada"
                     valor={formatarMoeda(despesaAtrasada)}
                     icone={<AlertCircle size={22} />}
                     corFundo="var(--color-danger-bg)"
@@ -182,6 +261,7 @@ export default function Dashboard() {
                 />
             </div>
 
+            {/* Saldo */}
             <h2 style={estiloSecao}>Saldo</h2>
             <CartaoMetrica
                 titulo="Saldo Mensal (Recebido - Pago)"
@@ -191,6 +271,44 @@ export default function Dashboard() {
                 corIcone={saldoMensal >= 0 ? 'var(--color-success)' : 'var(--color-danger)'}
                 corValor={saldoMensal >= 0 ? 'var(--color-success)' : 'var(--color-danger)'}
             />
+
+            {/* Partilha */}
+            {temPartilha && liquido > 0 && (
+                <>
+                    <h2 style={estiloSecao}>Partilha do Mes</h2>
+                    <div className="card">
+                        <ResponsiveContainer width="100%" height={320}>
+                            <PieChart>
+                                <Pie
+                                    data={dadosPartilha}
+                                    cx="50%"
+                                    cy="55%"
+                                    outerRadius={110}
+                                    paddingAngle={2}
+                                    dataKey="value"
+                                    label={({ name, percent }) =>
+                                        `${name} ${(percent * 100).toFixed(1)}%`
+                                    }
+                                    labelLine={false}
+                                >
+                                    {dadosPartilha.map((entry, index) => (
+                                        <Cell key={index} fill={entry.cor} />
+                                    ))}
+                                </Pie>
+                                <Tooltip
+                                    formatter={(value: number) => formatarMoeda(value)}
+                                    contentStyle={{
+                                        backgroundColor: 'var(--color-surface)',
+                                        border: '1px solid var(--color-border)',
+                                        borderRadius: '8px',
+                                        fontFamily: 'var(--font-body)',
+                                    }}
+                                />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                </>
+            )}
         </div>
     )
 }

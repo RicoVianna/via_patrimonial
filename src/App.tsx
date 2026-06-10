@@ -25,6 +25,10 @@ export type Tela =
 
 type Etapa = 'hero' | 'login' | 'splash' | 'sistema'
 
+function confirmarSaida(): boolean {
+    return window.confirm('Deseja realmente sair do Via Patrimonial?')
+}
+
 function App() {
     const [etapa, setEtapa] = useState<Etapa>('hero')
     const [telaAtiva, setTelaAtiva] = useState<Tela>('dashboard')
@@ -73,7 +77,11 @@ function App() {
             backgroundColor: 'var(--color-bg)'
         }}>
             {!isMobile && (
-                <Sidebar telaAtiva={telaAtiva} onNavegar={setTelaAtiva} />
+                <Sidebar
+                    telaAtiva={telaAtiva}
+                    onNavegar={setTelaAtiva}
+                    onSair={() => { if (confirmarSaida()) setEtapa('hero') }}
+                />
             )}
 
             <div style={{
@@ -110,7 +118,11 @@ function App() {
             </div>
 
             {isMobile && (
-                <NavMobile telaAtiva={telaAtiva} onNavegar={setTelaAtiva} />
+                <NavMobile
+                    telaAtiva={telaAtiva}
+                    onNavegar={setTelaAtiva}
+                    onSair={() => { if (confirmarSaida()) setEtapa('hero') }}
+                />
             )}
         </div>
     )

@@ -33,6 +33,7 @@ export default function Admin() {
     const [autenticado, setAutenticado] = useState(false)
     const [senhaDigitada, setSenhaDigitada] = useState('')
     const [erroSenha, setErroSenha] = useState(false)
+    const [mostrarSenha, setMostrarSenha] = useState(false)
     const [mostrarFormulario, setMostrarFormulario] = useState(false)
     const [editandoId, setEditandoId] = useState<string | null>(null)
     const [confirmarExclusao, setConfirmarExclusao] = useState<string | null>(null)
@@ -144,8 +145,9 @@ export default function Admin() {
                 </div>
 
                 <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ position: 'relative' }}>
                     <input
-                        type="password"
+                        type={mostrarSenha ? 'text' : 'password'}
                         value={senhaDigitada}
                         onChange={e => {
                             setSenhaDigitada(e.target.value)
@@ -154,9 +156,30 @@ export default function Admin() {
                         onKeyDown={e => e.key === 'Enter' && entrar()}
                         placeholder="Senha"
                         style={{
-                            borderColor: erroSenha ? 'var(--color-danger)' : undefined
+                            borderColor: erroSenha ? 'var(--color-danger)' : undefined,
+                            paddingRight: '44px',
                         }}
                     />
+                    <button
+                        onClick={() => setMostrarSenha(!mostrarSenha)}
+                        style={{
+                            position: 'absolute',
+                            right: '12px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: 'var(--color-text-muted)',
+                            padding: 0,
+                            fontSize: '1rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                        }}
+                    >
+                        {mostrarSenha ? '🙈' : '👁️'}
+                    </button>
+                </div>
                     {erroSenha && (
                         <p style={{ color: 'var(--color-danger)', fontSize: '0.85rem', margin: 0 }}>
                             Senha incorreta. Tente novamente.
@@ -257,7 +280,7 @@ export default function Admin() {
                 justifyContent: 'space-between',
                 marginBottom: '16px'
             }}>
-                <h2 style={{ fontSize: '1.1rem' }}>Participantes da partilha</h2>
+                <h2 style={{ fontSize: '1.1rem' }}>Participantes do Rateio</h2>
                 <button className="btn-primary" onClick={abrirFormularioNovo} style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -350,7 +373,7 @@ export default function Admin() {
                                         )}
                                     </div>
                                     <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-                                        {participante.percentual}% da partilha
+                                        {participante.percentual}% do rateio
                                         {participante.whatsapp && ` \u2022 ${participante.whatsapp}`}
                                     </div>
                                     {participante.email && (

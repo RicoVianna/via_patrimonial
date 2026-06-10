@@ -11,13 +11,13 @@ export default function Login({ onLogin }: LoginProps) {
     const [senha, setSenha] = useState('')
     const [erro, setErro] = useState(false)
     const [carregando, setCarregando] = useState(false)
+    const [mostrarSenha, setMostrarSenha] = useState(false)
 
     function handleLogin() {
         if (!senha) return
         setCarregando(true)
         setErro(false)
 
-        // Simula um pequeno delay para dar sensacao de autenticacao
         setTimeout(() => {
             if (senha === SENHA_SISTEMA) {
                 onLogin()
@@ -39,7 +39,7 @@ export default function Login({ onLogin }: LoginProps) {
             padding: '24px',
             fontFamily: 'var(--font-body)',
         }}>
-            {/* Particulas de fundo */}
+            {/* Fundo */}
             <div style={{
                 position: 'absolute',
                 inset: 0,
@@ -50,7 +50,7 @@ export default function Login({ onLogin }: LoginProps) {
                 pointerEvents: 'none'
             }} />
 
-            {/* Card de login */}
+            {/* Card */}
             <div style={{
                 width: '100%',
                 maxWidth: '420px',
@@ -60,7 +60,7 @@ export default function Login({ onLogin }: LoginProps) {
                 border: '1px solid rgba(255, 255, 255, 0.08)',
                 borderRadius: '24px',
                 padding: '48px 40px',
-                boxShadow: '0 32px 64px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.05)',
+                boxShadow: '0 32px 64px rgba(0, 0, 0, 0.4)',
                 position: 'relative',
                 zIndex: 1,
             }}>
@@ -112,44 +112,67 @@ export default function Login({ onLogin }: LoginProps) {
                         }}>
                             Senha
                         </label>
-                        <input
-                            type="password"
-                            value={senha}
-                            onChange={e => {
-                                setSenha(e.target.value)
-                                setErro(false)
-                            }}
-                            onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                            placeholder="Digite sua senha"
-                            style={{
-                                width: '100%',
-                                padding: '14px 16px',
-                                background: 'rgba(255,255,255,0.06)',
-                                border: `1px solid ${erro ? 'rgba(239, 68, 68, 0.6)' : 'rgba(255,255,255,0.1)'}`,
-                                borderRadius: '12px',
-                                color: 'white',
-                                fontSize: '0.95rem',
-                                fontFamily: 'var(--font-body)',
-                                outline: 'none',
-                                transition: 'all 0.2s ease',
-                                boxSizing: 'border-box',
-                            }}
-                            onFocus={e => {
-                                e.target.style.border = '1px solid rgba(34, 197, 94, 0.5)'
-                                e.target.style.background = 'rgba(255,255,255,0.08)'
-                            }}
-                            onBlur={e => {
-                                e.target.style.border = erro
-                                    ? '1px solid rgba(239, 68, 68, 0.6)'
-                                    : '1px solid rgba(255,255,255,0.1)'
-                                e.target.style.background = 'rgba(255,255,255,0.06)'
-                            }}
-                        />
+
+                        {/* Input com olhinho */}
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type={mostrarSenha ? 'text' : 'password'}
+                                value={senha}
+                                onChange={e => {
+                                    setSenha(e.target.value)
+                                    setErro(false)
+                                }}
+                                onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                                placeholder="Digite sua senha"
+                                style={{
+                                    width: '100%',
+                                    padding: '14px 48px 14px 16px',
+                                    background: 'rgba(255,255,255,0.06)',
+                                    border: `1px solid ${erro ? 'rgba(239, 68, 68, 0.6)' : 'rgba(255,255,255,0.1)'}`,
+                                    borderRadius: '12px',
+                                    color: 'white',
+                                    fontSize: '0.95rem',
+                                    fontFamily: 'var(--font-body)',
+                                    outline: 'none',
+                                    transition: 'all 0.2s ease',
+                                    boxSizing: 'border-box',
+                                }}
+                                onFocus={e => {
+                                    e.target.style.border = '1px solid rgba(34, 197, 94, 0.5)'
+                                    e.target.style.background = 'rgba(255,255,255,0.08)'
+                                }}
+                                onBlur={e => {
+                                    e.target.style.border = erro
+                                        ? '1px solid rgba(239, 68, 68, 0.6)'
+                                        : '1px solid rgba(255,255,255,0.1)'
+                                    e.target.style.background = 'rgba(255,255,255,0.06)'
+                                }}
+                            />
+                            <button
+                                onClick={() => setMostrarSenha(!mostrarSenha)}
+                                style={{
+                                    position: 'absolute',
+                                    right: '14px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    color: 'rgba(255,255,255,0.4)',
+                                    padding: 0,
+                                    fontSize: '1rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                {mostrarSenha ? '🙈' : '👁️'}
+                            </button>
+                        </div>
+
                         {erro && (
                             <p style={{
                                 color: 'rgba(239, 68, 68, 0.9)',
                                 fontSize: '0.82rem',
-                                marginTop: '8px',
                                 margin: '8px 0 0',
                             }}>
                                 Senha incorreta. Tente novamente.
@@ -222,7 +245,6 @@ export default function Login({ onLogin }: LoginProps) {
                     {carregando ? 'Verificando...' : 'Entrar'}
                 </button>
 
-                {/* Rodape do card */}
                 <p style={{
                     textAlign: 'center',
                     color: 'rgba(255,255,255,0.2)',

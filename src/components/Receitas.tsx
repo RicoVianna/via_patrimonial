@@ -38,7 +38,7 @@ const formVazio = {
 
 export default function Receitas() {
     const { dados, marcarReceitaRecebida, desfazerReceitaRecebida, adicionarReceita, editarReceita, excluirReceita } = useContexto()
-    const [aba, setAba] = useState<'pendentes' | 'recebidas' | 'atrasadas'>('pendentes')
+    const [aba, setAba] = useState<'previstas' | 'recebidas' | 'atrasadas'>('previstas')
     const [mostrarFormulario, setMostrarFormulario] = useState(false)
     const [editandoId, setEditandoId] = useState<string | null>(null)
     const [confirmarExclusao, setConfirmarExclusao] = useState<string | null>(null)
@@ -53,13 +53,12 @@ export default function Receitas() {
         r => r.mes === mesAtual && r.ano === anoAtual
     )
 
-    const pendentes = receitasMes.filter(
-        r => r.status === 'Pendente' || r.status === 'Atrasado'
-    )
+    // Separacao correta dos status
+    const previstas = receitasMes.filter(r => r.status === 'Pendente')
     const recebidas = receitasMes.filter(r => r.status === 'Recebido')
     const atrasadas = receitasMes.filter(r => r.status === 'Atrasado')
 
-    const totalPendente = pendentes.reduce((acc, r) => acc + r.valor, 0)
+    const totalPrevisto = previstas.reduce((acc, r) => acc + r.valor, 0)
     const totalRecebido = recebidas.reduce((acc, r) => acc + r.valor, 0)
     const totalAtrasado = atrasadas.reduce((acc, r) => acc + r.valor, 0)
 
@@ -139,7 +138,7 @@ export default function Receitas() {
     })
 
     function renderizarLista() {
-        let lista = pendentes
+        let lista = previstas
         if (aba === 'recebidas') lista = recebidas
         if (aba === 'atrasadas') lista = atrasadas
 
@@ -157,7 +156,6 @@ export default function Receitas() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {lista.map(receita => (
                     <div key={receita.id} className="card">
-                        {/* Linha principal */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                             <div style={{
                                 width: '44px',
@@ -210,12 +208,12 @@ export default function Receitas() {
                                     receita.status === 'Atrasado' ? 'badge badge-danger' :
                                     'badge badge-warning'
                                 }>
-                                    {receita.status}
+                                    {receita.status === 'Pendente' ? 'Prevista' : receita.status}
                                 </span>
                             </div>
                         </div>
 
-                        {/* Botoes — linha separada para mobile */}
+                        {/* Botoes */}
                         <div style={{
                             display: 'flex',
                             gap: '8px',
@@ -242,24 +240,24 @@ export default function Receitas() {
                             ) : (
                                 <>
                                     {receita.status !== 'Recebido' ? (
-                                    <button
-                                        className="btn-primary"
-                                        onClick={() => marcarReceitaRecebida(receita.id)}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', padding: '8px 14px' }}
-                                    >
-                                        <CheckCircle size={14} />
-                                        Recebido
-                                    </button>
-                                ) : (
-                                    <button
-                                        className="btn-outline"
-                                        onClick={() => desfazerReceitaRecebida(receita.id)}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', padding: '8px 14px' }}
-                                    >
-                                        <X size={14} />
-                                        Desfazer
-                                    </button>
-                                )}
+                                        <button
+                                            className="btn-primary"
+                                            onClick={() => marcarReceitaRecebida(receita.id)}
+                                            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', padding: '8px 14px' }}
+                                        >
+                                            <CheckCircle size={14} />
+                                            Recebido
+                                        </button>
+                                    ) : (
+                                        <button
+                                            className="btn-outline"
+                                            onClick={() => desfazerReceitaRecebida(receita.id)}
+                                            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', padding: '8px 14px' }}
+                                        >
+                                            <X size={14} />
+                                            Desfazer
+                                        </button>
+                                    )}
                                     <button
                                         className="btn-outline"
                                         onClick={() => abrirFormularioEdicao(receita)}
@@ -305,6 +303,7 @@ export default function Receitas() {
                 </button>
             </div>
 
+            {/* Resumo */}
             <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
@@ -312,9 +311,9 @@ export default function Receitas() {
                 marginBottom: '28px'
             }}>
                 <div className="card" style={{ textAlign: 'center' }}>
-                    <p style={{ fontSize: '0.8rem', marginBottom: '4px' }}>Pendente</p>
+                    <p style={{ fontSize: '0.8rem', marginBottom: '4px' }}>Previsto</p>
                     <div style={{ fontWeight: 700, color: 'var(--color-warning)', fontSize: '1.1rem' }}>
-                        {formatarMoeda(totalPendente)}
+                        {formatarMoeda(totalPrevisto)}
                     </div>
                 </div>
                 <div className="card" style={{ textAlign: 'center' }}>
@@ -331,6 +330,7 @@ export default function Receitas() {
                 </div>
             </div>
 
+            {/* Abas */}
             <div style={{
                 display: 'flex',
                 gap: '4px',
@@ -341,8 +341,8 @@ export default function Receitas() {
                 marginBottom: '20px',
                 width: 'fit-content'
             }}>
-                <button style={estiloAba(aba === 'pendentes')} onClick={() => setAba('pendentes')}>
-                    Pendentes ({pendentes.length})
+                <button style={estiloAba(aba === 'previstas')} onClick={() => setAba('previstas')}>
+                    Previstas ({previstas.length})
                 </button>
                 <button style={estiloAba(aba === 'recebidas')} onClick={() => setAba('recebidas')}>
                     Recebidas ({recebidas.length})
@@ -354,6 +354,7 @@ export default function Receitas() {
 
             {renderizarLista()}
 
+            {/* Formulario */}
             {mostrarFormulario && (
                 <div style={{
                     position: 'fixed',

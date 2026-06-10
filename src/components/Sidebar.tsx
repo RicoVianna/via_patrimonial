@@ -5,6 +5,7 @@ import { Tela } from '../App'
 interface SidebarProps {
     telaAtiva: Tela
     onNavegar: (tela: Tela) => void
+    onSair: () => void
 }
 
 const itensMenu = [
@@ -12,11 +13,11 @@ const itensMenu = [
     { id: 'imoveis'   as Tela, label: 'Imoveis',    icone: Building2 },
     { id: 'receitas'  as Tela, label: 'Receitas',   icone: TrendingUp },
     { id: 'despesas'  as Tela, label: 'Despesas',   icone: TrendingDown },
-    { id: 'rateio'    as Tela, label: 'Partilha',     icone: PieChart },
+    { id: 'rateio'    as Tela, label: 'Rateio',     icone: PieChart },
     { id: 'historico' as Tela, label: 'Historico',  icone: History },
 ]
 
-export default function Sidebar({ telaAtiva, onNavegar }: SidebarProps) {
+export default function Sidebar({ telaAtiva, onNavegar, onSair }: SidebarProps) {
     return (
         <aside style={{
             width: '240px',
@@ -116,9 +117,43 @@ export default function Sidebar({ telaAtiva, onNavegar }: SidebarProps) {
                 </button>
             </div>
 
+            {/* Botao sair */}
+            <div style={{ padding: '12px' }}>
+                <button
+                    onClick={onSair}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        width: '100%',
+                        padding: '11px 14px',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: 'transparent',
+                        color: 'rgba(255,255,255,0.4)',
+                        fontSize: '0.9rem',
+                        fontWeight: 400,
+                        cursor: 'pointer',
+                        border: 'none',
+                        textAlign: 'left',
+                        fontFamily: 'var(--font-body)',
+                        transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={e => {
+                        e.currentTarget.style.backgroundColor = 'rgba(192,57,43,0.15)'
+                        e.currentTarget.style.color = 'rgba(239,68,68,0.8)'
+                    }}
+                    onMouseLeave={e => {
+                        e.currentTarget.style.backgroundColor = 'transparent'
+                        e.currentTarget.style.color = 'rgba(255,255,255,0.4)'
+                    }}
+                >
+                    Sair
+                </button>
+            </div>
+
             {/* Rodape */}
             <div style={{
-                padding: '16px 24px',
+                padding: '12px 24px',
                 borderTop: '1px solid rgba(255,255,255,0.08)',
                 color: 'rgba(255,255,255,0.3)',
                 fontSize: '0.75rem',
